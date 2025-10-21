@@ -118,12 +118,47 @@ if st.button("🚀 Fetch & Analyze Data"):
                 st.write(results["cold_reds"])
 
             # ---------- WEIGHTED PICKS ----------
-            st.subheader("🎯 Weighted Number Picks")
-            st.caption("Generated using frequency-weighted probabilities (for fun only).")
-            for i, ticket in enumerate(results["weighted_tickets"], 1):
-                st.markdown(
-                    f"**Pick {i}:** 🎱 Whites → {ticket['whites']} | 🔴 Powerball → {ticket['powerball']}"
-                )
+import datetime
+st.subheader("🎯 Weighted Number Picks for Upcoming Draws")
+st.caption("Generated using frequency-weighted probabilities (for fun only).")
+
+# Define Powerball draw days (Mon, Wed, Sat)
+draw_days = ["Monday", "Wednesday", "Saturday"]
+
+# Get today's date and weekday
+today = datetime.date.today()
+today_name = today.strftime("%A")
+
+# Determine next draw day
+def next_draw_day(today_name):
+    days_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    idx_today = days_order.index(today_name)
+
+    for offset in range(1, 8):
+        next_day = days_order[(idx_today + offset) % 7]
+        if next_day in draw_days:
+            return next_day
+    return "Monday"  # fallback
+
+next_draw = next_draw_day(today_name)
+
+# Generate 5 picks per draw day
+for day in draw_days:
+    if day == next_draw:
+        st.markdown(f"### 🗓 <span style='color:limegreen'>**{day} Draw Picks (NEXT DRAW)**</span>", unsafe_allow_html=True)
+    else:
+        st.markdown(f"### 🗓 {day} Draw Picks")
+
+    for i in range(1, 6):
+        ticket = results["weighted_tickets"][(i - 1) % len(results["weighted_tickets"])]
+        st.markdown(
+            f"**Pick {i}:** 🎱 Whites → {ticket['whites']} | 🔴 Powerball → {ticket['powerball']}"
+        )
+    st.markdown("---")
+
+# Add generation timestamp
+st.caption(f"🕓 Picks generated on **{today.strftime('%A, %B %d, %Y')}** at **{datetime.datetime.now().strftime('%I:%M %p')}**")
+
 
             st.pyplot(fig)
 
