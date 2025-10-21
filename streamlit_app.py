@@ -121,6 +121,8 @@ if st.button("🚀 Fetch & Analyze Data"):
     st.subheader("🎯 Weighted Number Picks for Upcoming Draws")
     st.caption("Generated using frequency-weighted probabilities (for fun only).")
 
+    import numpy as np
+
     draw_days = ["Monday", "Wednesday", "Saturday"]
     today = datetime.date.today()
     today_name = today.strftime("%A")
@@ -137,7 +139,6 @@ if st.button("🚀 Fetch & Analyze Data"):
     next_draw = next_draw_day(today_name)
 
     # Prepare weights
-    import numpy as np
     white_weights = results["white_freq_series"].values
     white_numbers = results["white_freq_series"].index
     power_weights = results["red_freq_series"].values
@@ -166,6 +167,7 @@ if st.button("🚀 Fetch & Analyze Data"):
 
 except Exception as e:
     st.error(f"⚠️ Error during analysis: {e}")
+
 
 
 else:
