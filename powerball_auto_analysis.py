@@ -16,19 +16,32 @@ def fetch_powerball_data():
     return df
 
 def preprocess(df):
-    # Adjust column names if necessary
+    # Make column names lowercase for easy matching
     df = df.copy()
     df.columns = df.columns.str.lower()
-    if "winning_numbers" in df.columns:
+
+    # Try to automatically detect the right column
+    possible_cols = ["winning_numbers", "winning numbers"]
+    match_col = None
+    for col in df.columns:
+        if col in possible_cols:
+            match_col = col
+            break
+
+    if match_col:
+        # Split the column into separate number columns
         df[['white1','white2','white3','white4','white5','powerball']] = (
-            df['winning_numbers']
+            df[match_col]
+            .astype(str)
             .str.split(' ', expand=True)
             .iloc[:, :6]
             .astype(int)
         )
     else:
-        raise ValueError("Expected a 'winning_numbers' column in dataset.")
+        raise ValueError(f"Could not find a winning numbers column. Found columns: {df.columns.tolist()}")
+
     return df
+
 
 def analyze(df):
     white_numbers = pd.concat([
