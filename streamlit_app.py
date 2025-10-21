@@ -16,7 +16,7 @@ st.set_page_config(
 )
 
 # -------------------- SIDEBAR --------------------
-st.sidebar.image("https://upload.wikimedia.org/wikipedia/en/e/e5/Powerball_logo.svg", width=150)
+st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/9/99/Powerball_logo.svg", width=150)
 st.sidebar.title("🎯 Powerball Analyzer")
 st.sidebar.markdown("Analyze historical Powerball draws and visualize data trends — for fun!")
 
