@@ -1,5 +1,7 @@
 import streamlit as st
 import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
 import powerball_auto_analysis as pba
 
 # -------------------- APP CONFIG --------------------
@@ -11,17 +13,17 @@ st.set_page_config(
 )
 
 # -------------------- SIDEBAR --------------------
-st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/9/99/Powerball_logo.svg", width=150)
+st.sidebar.image("https://upload.wikimedia.org/wikipedia/en/e/e5/Powerball_logo.svg", width=150)
 st.sidebar.title("🎯 Powerball Analyzer")
-st.sidebar.markdown("Analyze historical Powerball draws and generate data-driven picks — for fun!")
+st.sidebar.markdown("Analyze historical Powerball draws and visualize data trends — for fun!")
 
 st.sidebar.markdown("---")
 st.sidebar.info("**Disclaimer:** This app is for **educational and entertainment** purposes only — not for predicting or gambling.")
-st.sidebar.markdown("Made with ❤️ by **Akwesi Khaled**")
+st.sidebar.markdown("Made with ❤️ by **Akwesi Khaled | Cinemagic Studios**")
 
 # -------------------- MAIN CONTENT --------------------
 st.title("🎰 Powerball Data Analyzer Dashboard")
-st.markdown("Welcome! Click below to fetch real Powerball results and explore frequency insights, randomness tests, and weighted picks.")
+st.markdown("Welcome! Click below to fetch real Powerball results and explore data-driven insights, trends, and visual patterns.")
 
 if st.button("🚀 Fetch & Analyze Data"):
     with st.spinner("Fetching and analyzing Powerball data... ⏳"):
@@ -33,18 +35,64 @@ if st.button("🚀 Fetch & Analyze Data"):
 
             st.success("✅ Analysis complete!")
 
-            # -------------- DISPLAY RESULTS --------------
+            # ---------- FREQUENCY OVERVIEW ----------
             st.subheader("📊 Frequency Overview")
 
             col1, col2 = st.columns(2)
             with col1:
-                st.markdown("### White Balls (1–69)")
+                st.markdown("### White Ball Frequencies")
                 st.bar_chart(results["white_freq_series"])
             with col2:
-                st.markdown("### Powerballs (1–26)")
+                st.markdown("### Powerball Frequencies")
                 st.bar_chart(results["red_freq_series"])
 
-            # -------------- CHI-SQUARE TEST --------------
+            # ---------- CUSTOM VISUAL: SIDE-BY-SIDE ----------
+            st.subheader("🎨 Combined Frequency Visualization")
+
+            freq_fig, ax = plt.subplots(figsize=(10, 4))
+            ax.bar(results["white_freq_series"].index, results["white_freq_series"].values, label="White Balls", alpha=0.7)
+            ax.bar(
+                results["red_freq_series"].index,
+                results["red_freq_series"].values / max(results["red_freq_series"].values) * max(results["white_freq_series"].values),
+                label="Powerballs (scaled)",
+                alpha=0.7,
+                color="red"
+            )
+            ax.legend()
+            ax.set_title("White Balls vs Powerballs Frequency Comparison")
+            ax.set_xlabel("Ball Number")
+            ax.set_ylabel("Frequency (scaled)")
+            st.pyplot(freq_fig)
+
+            # ---------- TRENDS OVER TIME ----------
+            st.subheader("📈 Frequency Trend Over Time")
+
+            # Create trend data
+            white_numbers = df[['white1', 'white2', 'white3', 'white4', 'white5']].melt(value_name='number')
+            white_trend = white_numbers['number'].value_counts().sort_index().reset_index()
+            white_trend.columns = ['Ball', 'Frequency']
+
+            trend_fig, ax = plt.subplots(figsize=(10, 4))
+            sns.lineplot(data=white_trend, x='Ball', y='Frequency', color='blue', ax=ax)
+            ax.set_title("Trend of White Ball Frequencies")
+            ax.set_xlabel("White Ball Number (1–69)")
+            ax.set_ylabel("Occurrences")
+            st.pyplot(trend_fig)
+
+            # ---------- HEATMAP ----------
+            st.subheader("🔥 Hot vs Cold Heatmap")
+
+            heat_data = pd.DataFrame({
+                "White Balls": results["white_freq_series"],
+                "Powerballs": results["red_freq_series"].reindex(range(1, 70), fill_value=0)
+            })
+
+            heat_fig, ax = plt.subplots(figsize=(8, 5))
+            sns.heatmap(heat_data.T, cmap="coolwarm", cbar=True, ax=ax)
+            ax.set_title("Heatmap of Hot (Red) and Cold (Blue) Numbers")
+            st.pyplot(heat_fig)
+
+            # ---------- RANDOMNESS TEST ----------
             st.subheader("🎲 Randomness Check")
             st.markdown(
                 f"""
@@ -54,7 +102,7 @@ if st.button("🚀 Fetch & Analyze Data"):
             )
             st.caption("Lower p-values suggest non-random patterns — higher means more random draws.")
 
-            # -------------- HOT & COLD --------------
+            # ---------- HOT & COLD ----------
             st.subheader("🔥 Hot & 🧊 Cold Numbers")
 
             col3, col4 = st.columns(2)
@@ -69,7 +117,7 @@ if st.button("🚀 Fetch & Analyze Data"):
                 st.markdown("**Top 3 Coldest Powerballs:**")
                 st.write(results["cold_reds"])
 
-            # -------------- WEIGHTED PICKS --------------
+            # ---------- WEIGHTED PICKS ----------
             st.subheader("🎯 Weighted Number Picks")
             st.caption("Generated using frequency-weighted probabilities (for fun only).")
             for i, ticket in enumerate(results["weighted_tickets"], 1):
@@ -77,7 +125,6 @@ if st.button("🚀 Fetch & Analyze Data"):
                     f"**Pick {i}:** 🎱 Whites → {ticket['whites']} | 🔴 Powerball → {ticket['powerball']}"
                 )
 
-            # -------------- VISUAL --------------
             st.pyplot(fig)
 
         except Exception as e:
