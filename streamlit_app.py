@@ -34,7 +34,14 @@ if st.button("🚀 Fetch & Analyze Data"):
         try:
             # Fetch + preprocess + analyze
             df_raw = pba.fetch_powerball_data()
+            
             df = pba.preprocess(df_raw)
+            # 🔄 Filter data for only the last 1 year
+            one_year_ago = datetime.date.today() - datetime.timedelta(days=365)
+            if "date" in df.columns:
+                df = df[df["date"] >= pd.Timestamp(one_year_ago)]
+            st.info(f"📅 Using Powerball draws from the last 1 year — {len(df)} records included.")
+
             results, fig = pba.analyze(df)
 
             st.success("✅ Analysis complete!")
