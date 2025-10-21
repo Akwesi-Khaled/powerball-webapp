@@ -2,9 +2,8 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-import powerball_auto_analysis as pba
 import datetime
-
+import powerball_auto_analysis as pba
 
 # -------------------- APP CONFIG --------------------
 st.set_page_config(
@@ -15,7 +14,7 @@ st.set_page_config(
 )
 
 # -------------------- SIDEBAR --------------------
-st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/9/99/Powerball_logo.svg", width=150)
+st.sidebar.image("https://upload.wikimedia.org/wikipedia/en/e/e5/Powerball_logo.svg", width=150)
 st.sidebar.title("🎯 Powerball Analyzer")
 st.sidebar.markdown("Analyze historical Powerball draws and visualize data trends — for fun!")
 
@@ -69,7 +68,6 @@ if st.button("🚀 Fetch & Analyze Data"):
             # ---------- TRENDS OVER TIME ----------
             st.subheader("📈 Frequency Trend Over Time")
 
-            # Create trend data
             white_numbers = df[['white1', 'white2', 'white3', 'white4', 'white5']].melt(value_name='number')
             white_trend = white_numbers['number'].value_counts().sort_index().reset_index()
             white_trend.columns = ['Ball', 'Frequency']
@@ -120,48 +118,40 @@ if st.button("🚀 Fetch & Analyze Data"):
                 st.write(results["cold_reds"])
 
             # ---------- WEIGHTED PICKS ----------
-import datetime
-st.subheader("🎯 Weighted Number Picks for Upcoming Draws")
-st.caption("Generated using frequency-weighted probabilities (for fun only).")
+            st.subheader("🎯 Weighted Number Picks for Upcoming Draws")
+            st.caption("Generated using frequency-weighted probabilities (for fun only).")
 
-# Define Powerball draw days (Mon, Wed, Sat)
-draw_days = ["Monday", "Wednesday", "Saturday"]
+            draw_days = ["Monday", "Wednesday", "Saturday"]
+            today = datetime.date.today()
+            today_name = today.strftime("%A")
 
-# Get today's date and weekday
-today = datetime.date.today()
-today_name = today.strftime("%A")
+            def next_draw_day(today_name):
+                days_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+                idx_today = days_order.index(today_name)
+                for offset in range(1, 8):
+                    next_day = days_order[(idx_today + offset) % 7]
+                    if next_day in draw_days:
+                        return next_day
+                return "Monday"
 
-# Determine next draw day
-def next_draw_day(today_name):
-    days_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    idx_today = days_order.index(today_name)
+            next_draw = next_draw_day(today_name)
 
-    for offset in range(1, 8):
-        next_day = days_order[(idx_today + offset) % 7]
-        if next_day in draw_days:
-            return next_day
-    return "Monday"  # fallback
+            for day in draw_days:
+                if day == next_draw:
+                    st.markdown(f"### 🗓 <span style='color:limegreen'>**{day} Draw Picks (NEXT DRAW)**</span>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"### 🗓 {day} Draw Picks")
 
-next_draw = next_draw_day(today_name)
+                for i in range(1, 6):
+                    ticket = results["weighted_tickets"][(i - 1) % len(results["weighted_tickets"])]
+                    st.markdown(
+                        f"**Pick {i}:** 🎱 Whites → {ticket['whites']} | 🔴 Powerball → {ticket['powerball']}"
+                    )
+                st.markdown("---")
 
-# Generate 5 picks per draw day
-for day in draw_days:
-    if day == next_draw:
-        st.markdown(f"### 🗓 <span style='color:limegreen'>**{day} Draw Picks (NEXT DRAW)**</span>", unsafe_allow_html=True)
-    else:
-        st.markdown(f"### 🗓 {day} Draw Picks")
+            st.caption(f"🕓 Picks generated on **{today.strftime('%A, %B %d, %Y')}** at **{datetime.datetime.now().strftime('%I:%M %p')}**")
 
-    for i in range(1, 6):
-        ticket = results["weighted_tickets"][(i - 1) % len(results["weighted_tickets"])]
-        st.markdown(
-            f"**Pick {i}:** 🎱 Whites → {ticket['whites']} | 🔴 Powerball → {ticket['powerball']}"
-        )
-    st.markdown("---")
-
-# Add generation timestamp
-st.caption(f"🕓 Picks generated on **{today.strftime('%A, %B %d, %Y')}** at **{datetime.datetime.now().strftime('%I:%M %p')}**")
-
-
+            # ---------- VISUAL RECAP ----------
             st.pyplot(fig)
 
         except Exception as e:
